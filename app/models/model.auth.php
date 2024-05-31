@@ -30,8 +30,8 @@ class Auth
             ];
         }
 
-        // Adiciona lógica adicional de verificação de token conforme necessário
-        // Adiciona a verificação do token "a1c2b3"
+    
+ 
         if ($token !== "a1c2b3") {
             return [
                 'status'  => 401,
@@ -45,5 +45,5 @@ class Auth
     }
 }
 
-// Adiciona o token "a1c2b3" para autorizar
+
 $GLOBALS['authorization'] = "Bearer a1c2b3";
