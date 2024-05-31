@@ -6,10 +6,12 @@ use Swoole\Http\Server;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use \Firebase\JWT\JWT;
+use GuzzleHttp\Client;
 
 ini_set('display_errors', 'on');
 error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
 
+// date_default_timezone_set("Brazil/East");
 // Alterar timezone pra não ler horário de verão
 date_default_timezone_set("America/Recife");
 
@@ -20,36 +22,42 @@ function fatal_handler()
 {
     $error = error_get_last();
     $extra['title'] = 'Fatal handler API';
-    Email::notify_fatal_error($error, $extra);
+
+    $discord_message = DiscordNotifications::build_fatal_error_log($error, $extra);
+    send_discord_notification($discord_message, 'errors');
+}
+
+function send_discord_notification($message, $type)
+{
+    $webhook_urls = [
+        'errors' => 'https://discord.com/api/webhooks/1245882814935728178/yx_Xpi1jDTlM5skpg1apUSdVq317z4bAuCtjQUNk7LqggWXdAi1pUhqJIHWJWHws0vCp',
+        'fatal_errors' => 'https://discord.com/api/webhooks/1246159223079833601/ZhTvIwByuypr_HZL_tl46MgU6Y4ZkkF_JdkAqwCmO1MaSzPBOzQGX1vEagCPZh6S1WBE'
+    ];
+
+    $webhook_url = $webhook_urls[$type];
+
+    $client = new Client();
+    try {
+        $response = $client->post($webhook_url, [
+            'json' => [
+                'username' => 'Fatal bot',
+                'avatar_url' => 'https://cdn.discordapp.com/attachments/1245882616142499912/1246163598364115066/637dc9daee9e5.jpg?ex=665b63ca&is=665a124a&hm=cade30f223c51533f7e8386cae922289fdc850e6ffbb3068f52c49113f285e61&',
+                'content' => $message
+            ]
+        ]);
+
+        if ($response->getStatusCode() !== 204) {
+            throw new Exception("Erro ao enviar mensagem para o Discord: " . $response->getStatusCode() . ":" . $response->getBody());
+        }
+    } catch (Exception $e) {
+        echo "Erro ao enviar mensagem para o Discord: " . $e->getMessage();
+    }
 }
 
 require_once "config.php";
 require_once "controllers/init.php";
 
-if ($ENV == "production") {
-    $server = new Swoole\HTTP\Server("0.0.0.0", 3000, SWOOLE_PROCESS, SWOOLE_SOCK_TCP);
-
-    $server->set([
-        'worker_num' => 8,
-        'reactor_num' => 2,
-        'open_tcp_keepalive' => 1, // enable TCP Keep-Alive check
-        'tcp_keepidle' => 3, // check if there is no data for 4s.
-        'tcp_keepinterval' => 1, // check if there is data every 1s
-        'tcp_keepcount' => 2, // close the connection if there is no data for 5 cycles.
-        'max_conn' => 10000,
-        'max_request' => 0,
-        'enable_reuse_port' => true,
-        'buffer_output_size' => 32 * 1024 * 10240,
-        'backlog' => 128,
-        'package_max_length' => 9999999,
-        'heartbeat_idle_time' => 30,
-        'heartbeat_check_interval' => 5,
-        'log_level' => 0,
-        'open_http2_protocol' => true, // Enable HTTP2 protocol
-    ]);
-} else {
-    $server = new Server('0.0.0.0', 8080);
-}
+$server = new Server('0.0.0.0', 8080);
 
 $server->on('start', function (Server $server) use ($hostname, $port) {
     echo sprintf('Swoole http server is started at http://%s:%s' . PHP_EOL, $hostname, $port);
@@ -73,11 +81,14 @@ $server->on('request', static function (Request $request, Response $response) {
     $_FILES = $request->files ?? [];
     $_POST = $request->post ?? [];
 
+    // form-data and x-www-form-urlencoded work out of the box so we handle JSON POST here
     if ($request_method === 'POST' && $request->header['content-type'] === 'application/json') {
         if (!$_POST || count($_POST) == 0) {
             $body = $request->rawContent();
-            $_POST = empty($body) ? [] : json_decode($body, true);
+            $_POST = empty($body) ? [] : json_decode($body);
         }
+    } elseif ($request->header["authorization"]) {
+        $_POST = $request->post;
     } else {
         $_POST = $request->post ?? [];
     }

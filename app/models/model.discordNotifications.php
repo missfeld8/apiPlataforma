@@ -7,8 +7,8 @@ class DiscordNotifications
 
     // Adicione os links dos seus webhooks aqui
     public $all_channels = [
-        "default" => "https://discord.com/api/webhooks/SEU_WEBHOOK_AQUI",
-        "errors" => "https://discord.com/api/webhooks/SEU_WEBHOOK_DE_ERROS_AQUI",
+        "default" => "https://discord.com/api/webhooks/1246159223079833601/ZhTvIwByuypr_HZL_tl46MgU6Y4ZkkF_JdkAqwCmO1MaSzPBOzQGX1vEagCPZh6S1WBE",
+        "errors" => "https://discord.com/api/webhooks/1245882814935728178/yx_Xpi1jDTlM5skpg1apUSdVq317z4bAuCtjQUNk7LqggWXdAi1pUhqJIHWJWHws0vCp",
         // Adicione outros webhooks conforme necessário
     ];
 
@@ -62,9 +62,9 @@ class DiscordNotifications
     {
         $discord_message = DiscordNotifications::build_exception_log($exception);
         (new DiscordNotifications('errors'))
-            ->username("Error Notifier")
-            ->message($discord_message)
-            ->send();
+        ->username("Error Notifier")
+        ->message($discord_message)
+        ->send();
     }
 
     public static function build_exception_log($exception)
@@ -87,7 +87,7 @@ class DiscordNotifications
 // Exemplo de uso
 try {
     // Código que pode lançar uma exceção
-    throw new Exception("Teste de erro");
+    throw new Exception("Servidor Iniciou");
 } catch (Exception $e) {
     DiscordNotifications::sendException($e);
 }

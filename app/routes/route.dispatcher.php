@@ -1,19 +1,14 @@
 <?php
-// composer require nikic/fast-route
 use FastRoute\RouteCollector;
 
 $dispatcher = FastRoute\simpleDispatcher(function (RouteCollector $r) {
-
     // Hello
     $r->addRoute('GET', '/hello', 'get_hello');
     $r->addRoute('GET', '/ping', 'get_ping');
-    $r->addRoute('POST', '/lat_lng', 'post_lat_lng');
 });
-
 
 function handleRequest($dispatcher, string $request_method, string $request_uri)
 {
-
     list($code, $handler, $vars) = $dispatcher->dispatch($request_method, $request_uri);
 
     switch ($code) {

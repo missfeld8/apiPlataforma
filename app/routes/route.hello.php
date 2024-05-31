@@ -35,7 +35,7 @@ function post_lat_lng(array $vars)
     $auth = Auth::check(0);
     if ($auth != 1) return $auth;
 
-    if ($GLOBALS[client_id] == null) {
+    if ($GLOBALS[church_id] == null) {
         return [
             'status'  => 401,
             'message' => 'This endpoint cant be accessed by admin token.',
