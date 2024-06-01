@@ -2,7 +2,6 @@ app/vendor/*
 app/vendor/
 app/vendor
 app/composer.lock
-composer.json
 composer.lock
 vendor
 vendor/
