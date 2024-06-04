@@ -1,5 +1,4 @@
 <?php
-
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Swoole\Http\Server;
@@ -75,7 +74,7 @@ $server->on('request', static function (Request $request, Response $response) {
     $_SERVER['REQUEST_METHOD'] = $request_method;
     $_SERVER['REMOTE_ADDR']    = $request->server['remote_addr'];
 
-    $GLOBALS['authorization'] = $request->header["authorization"];
+    $GLOBALS[authorization] = $request->header["authorization"];
 
     $_GET = $request->get ?? [];
     $_FILES = $request->files ?? [];
@@ -88,7 +87,18 @@ $server->on('request', static function (Request $request, Response $response) {
             $_POST = empty($body) ? [] : json_decode($body);
         }
     } elseif ($request->header["authorization"]) {
-        $_POST = $request->post;
+        try {
+            $auth = explode(" ", $request->header["authorization"], 4);
+            $token = $auth[1];
+            $tokenDecoded = JWT::decode($token, $secret, array('HS256'));
+            if ($request->post[client_id] == $tokenDecoded->client_id && $tokenDecoded->d === date("d") && $request->post[event_id] === $tokenDecoded->event_id) {
+                $_POST = $request->post;
+            } else {
+                $_POST = [];
+            }
+        } catch (Exception $e) {
+            echo "Erro ao validar o token!";
+        }
     } else {
         $_POST = $request->post ?? [];
     }
