@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Swoole\Http\Server;
@@ -69,6 +70,9 @@ $server->on('request', static function (Request $request, Response $response) {
     $request_method = $request->server['request_method'];
     $request_uri    = $request->server['request_uri'];
 
+    // Log de debug para verificar as solicitações recebidas
+    echo "Recebida solicitação $request_method para $request_uri" . PHP_EOL;
+
     // populate the global state with the request info
     $_SERVER['REQUEST_URI']    = $request_uri;
     $_SERVER['REQUEST_METHOD'] = $request_method;
@@ -79,6 +83,9 @@ $server->on('request', static function (Request $request, Response $response) {
     $_GET = $request->get ?? [];
     $_FILES = $request->files ?? [];
     $_POST = $request->post ?? [];
+
+    // Log de debug para verificar os dados da solicitação
+    echo "Dados da solicitação POST: " . print_r($_POST, true) . PHP_EOL;
 
     // form-data and x-www-form-urlencoded work out of the box so we handle JSON POST here
     if ($request_method === 'POST' && $request->header['content-type'] === 'application/json') {
