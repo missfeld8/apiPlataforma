@@ -5,6 +5,9 @@ $dispatcher = FastRoute\simpleDispatcher(function (RouteCollector $r) {
     // Hello
     $r->addRoute('GET', '/hello', 'get_hello');
     $r->addRoute('GET', '/ping', 'get_ping');
+
+    //users
+    $r->addRoute('POST', '/create_user', 'post_create_user');
 });
 
 function handleRequest($dispatcher, string $request_method, string $request_uri)

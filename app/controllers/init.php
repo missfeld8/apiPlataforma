@@ -32,6 +32,17 @@ while ($fileName = $dir->read()) {
 
 $dir->close();
 
+function getRandomStringMtrand($length = 16)
+{
+    $keys = array_merge(range(0, 9), range('a', 'z'));
+    $key = "";
+    for ($i = 0; $i < $length; $i ++) {
+        $key .= $keys[mt_rand(0, count($keys) - 1)];
+    }
+    $randomString = $key;
+    return $randomString;
+}
+
 function mes($n, $full = 1)
 {
     if ($full == 1) {
