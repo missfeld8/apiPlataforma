@@ -78,7 +78,7 @@ $server->on('request', static function (Request $request, Response $response) {
     $_SERVER['REQUEST_METHOD'] = $request_method;
     $_SERVER['REMOTE_ADDR']    = $request->server['remote_addr'];
 
-    $GLOBALS[authorization] = $request->header["authorization"];
+    $GLOBALS['authorization'] = $request->header["authorization"] ?? null;
 
     $_GET = $request->get ?? [];
     $_FILES = $request->files ?? [];
@@ -91,20 +91,20 @@ $server->on('request', static function (Request $request, Response $response) {
     if ($request_method === 'POST' && $request->header['content-type'] === 'application/json') {
         if (!$_POST || count($_POST) == 0) {
             $body = $request->rawContent();
-            $_POST = empty($body) ? [] : json_decode($body);
+            $_POST = empty($body) ? [] : json_decode($body, true);
         }
     } elseif ($request->header["authorization"]) {
         try {
             $auth = explode(" ", $request->header["authorization"], 4);
             $token = $auth[1];
-            $tokenDecoded = JWT::decode($token, $secret, array('HS256'));
-            if ($request->post[client_id] == $tokenDecoded->client_id && $tokenDecoded->d === date("d") && $request->post[event_id] === $tokenDecoded->event_id) {
+            $tokenDecoded = JWT::decode($token, $secret, ['HS256']);
+            if ($request->post['client_id'] == $tokenDecoded->client_id && $tokenDecoded->d === date("d") && $request->post['event_id'] === $tokenDecoded->event_id) {
                 $_POST = $request->post;
             } else {
                 $_POST = [];
             }
         } catch (Exception $e) {
-    
+            // log error or handle it accordingly
         }
     } else {
         $_POST = $request->post ?? [];
@@ -114,8 +114,15 @@ $server->on('request', static function (Request $request, Response $response) {
     $response->header('Content-Type', 'application/json');
     $response->header('Access-Control-Allow-Origin', '*');
     $response->header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, PATCH, DELETE');
-    $response->header('Access-Control-Allow-Headers', '*');
+    $response->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     $response->header('Access-Control-Allow-Credentials', 'true');
+
+    // Handle preflight request
+    if ($request_method === 'OPTIONS') {
+        $response->status(204);
+        $response->end();
+        return;
+    }
 
     $result = handleRequest($dispatcher, $request_method, $request_uri);
 
