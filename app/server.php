@@ -104,7 +104,7 @@ $server->on('request', static function (Request $request, Response $response) {
                 $_POST = [];
             }
         } catch (Exception $e) {
-            echo "Erro ao validar o token!";
+    
         }
     } else {
         $_POST = $request->post ?? [];
